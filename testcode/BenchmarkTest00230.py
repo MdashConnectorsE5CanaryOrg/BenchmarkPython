@@ -15,8 +15,9 @@ PURPOSE. See the GNU General Public License for more details.
   Created: 2025
 '''
 
-from flask import redirect, url_for, request, make_response, render_template
+from flask import redirect, url_for, request, make_response, render_template, current_app
 from helpers.utils import escape_for_html
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 def init(app):
 
@@ -35,24 +36,29 @@ def init(app):
 
 		bar = param + '_SafeStuff'
 
-		import secrets
-		from helpers.utils import mysession
-
 		num = 'BenchmarkTest00230'[13:]
 		user = f'SafeRobbie{num}'
 		cookie = f'rememberMe{num}'
-		value = str(secrets.randbelow(2**32))
+		serializer = URLSafeTimedSerializer(current_app.secret_key)
+		max_age = 60 * 60 * 24 * 30
+		cookie_value = request.cookies.get(cookie, '')
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		try:
+			remembered = serializer.loads(cookie_value, max_age=max_age)
+		except (BadSignature, SignatureExpired):
+			remembered = None
+
+		if remembered == {'user': user, 'cookie': cookie}:
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
+			resp = make_response(RESPONSE)
 		else:
-			mysession[cookie] = value
+			value = serializer.dumps({'user': user, 'cookie': cookie})
 			RESPONSE += (
-				f'{user} has been remembered with cookie:'
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{user} has been remembered.<br/>'
 			)
+			resp = make_response(RESPONSE)
+			resp.set_cookie(cookie, value, max_age=max_age, httponly=True, samesite='Lax')
 
-		return RESPONSE
-
+		return resp
