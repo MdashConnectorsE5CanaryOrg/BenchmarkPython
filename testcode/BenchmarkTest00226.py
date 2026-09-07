@@ -37,24 +37,28 @@ def init(app):
 		if 'should' in bar:
 			bar = param
 
-		import random
+		import secrets
 		from helpers.utils import mysession
 
 		num = 'BenchmarkTest00226'[13:]
 		user = f'Randall{num}'
 		cookie = f'rememberMe{num}'
-		value = str(random.random())[2:]
+		client_id = request.remote_addr or 'unknown-client'
+		client_key = f'{cookie}:{user}:{client_id}'
+		value = secrets.token_urlsafe(32)
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		if client_key in mysession and secrets.compare_digest(
+			request.cookies.get(cookie, ''),
+			mysession[client_key],
+		):
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
+			mysession[client_key] = value
 			RESPONSE += (
-				f'{user} has been remembered with cookie: '
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{user} has been remembered for this client with cookie: '
+				f'{cookie} whose value is: {mysession[client_key]}<br/>'
 			)
 
 		return RESPONSE
-
