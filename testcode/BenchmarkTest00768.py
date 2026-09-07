@@ -39,24 +39,33 @@ def init(app):
 		else:
 			bar = param
 
-		import random
+		import secrets
+		import time
 		from helpers.utils import mysession
 
 		num = 'BenchmarkTest00768'[13:]
 		user = f'Nancy{num}'
 		cookie = f'rememberMe{num}'
-		value = str(random.normalvariate())[2:]
+		stored = mysession.get(cookie)
+		client_value = request.cookies.get(cookie)
+		expires_at = time.time() + 3600
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
-			RESPONSE += (
+		if (
+			isinstance(stored, dict)
+			and stored.get('value') == client_value
+			and stored.get('expires_at', 0) > time.time()
+		):
+			value = secrets.token_urlsafe(32)
+			mysession[cookie] = {'value': value, 'expires_at': expires_at}
+			response = make_response(
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
-			RESPONSE += (
-				f'{user} has been remembered with cookie: '
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+			value = secrets.token_urlsafe(32)
+			mysession[cookie] = {'value': value, 'expires_at': expires_at}
+			response = make_response(
+				f'{user} has been remembered.<br/>'
 			)
 
-		return RESPONSE
-
+		response.set_cookie(cookie, value, max_age=3600, httponly=True, samesite='Lax')
+		return response
