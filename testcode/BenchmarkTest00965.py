@@ -64,14 +64,12 @@ def init(app):
 
 		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
 			RESPONSE += (
-				f'Welcome back: {user}<br/>'
+				'Remember-me cookie matched, but no user identity is restored from this value alone.<br/>'
 			)
 		else:
 			mysession[cookie] = value
 			RESPONSE += (
-				f'{user} has been remembered with cookie: '
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{user} remember-me cookie initialized.<br/>'
 			)
 
 		return RESPONSE
-
