@@ -15,7 +15,7 @@ PURPOSE. See the GNU General Public License for more details.
   Created: 2025
 '''
 
-from flask import redirect, url_for, request, make_response, render_template
+from flask import redirect, url_for, request, make_response, render_template, session
 from helpers.utils import escape_for_html
 
 def init(app):
@@ -47,23 +47,28 @@ def init(app):
 				bar = 'bob\'s your uncle'
 
 		import random
-		from helpers.utils import mysession
 
 		num = 'BenchmarkTest00795'[13:]
 		user = f'SafeRandall{num}'
 		cookie = f'rememberMe{num}'
+		token_key = f'{cookie}_token'
 		value = str(random.SystemRandom().random())[2:]
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		remembered_cookie = request.cookies.get(cookie)
+		session_token = session.get(token_key)
+
+		if remembered_cookie and session_token and remembered_cookie == session_token:
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
+			session[token_key] = value
 			RESPONSE += (
-				f'{user} has been remembered with cookie: '
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{user} has been remembered.<br/>'
 			)
 
-		return RESPONSE
+		response = make_response(RESPONSE)
+		if session.get(token_key) and remembered_cookie != session.get(token_key):
+			response.set_cookie(cookie, session[token_key], httponly=True, samesite='Lax')
 
+		return response
