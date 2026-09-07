@@ -15,7 +15,7 @@ PURPOSE. See the GNU General Public License for more details.
   Created: 2025
 '''
 
-from flask import redirect, url_for, request, make_response, render_template
+from flask import redirect, url_for, request, make_response, render_template, session
 from helpers.utils import escape_for_html
 
 def init(app):
@@ -49,18 +49,30 @@ def init(app):
 		num = 'BenchmarkTest00043'[13:]
 		user = f'SafeTruman{num}'
 		cookie = f'rememberMe{num}'
+		binding_key = f'{cookie}_binding'
 		value = secrets.token_urlsafe(32)
+		stored = mysession.get(cookie)
+		presented = request.cookies.get(cookie)
+		binding = session.get(binding_key)
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		if (
+			binding
+			and isinstance(stored, dict)
+			and presented == stored.get('token')
+			and binding == stored.get('binding')
+		):
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
+			binding = secrets.token_urlsafe(16)
+			session[binding_key] = binding
+			mysession[cookie] = {
+				'token': value,
+				'binding': binding,
+			}
 			RESPONSE += (
-				f'{user} has been remembered with cookie:'
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{user} has been remembered.<br/>'
 			)
 
 		return RESPONSE
-
