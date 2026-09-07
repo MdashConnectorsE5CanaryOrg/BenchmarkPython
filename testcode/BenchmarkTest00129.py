@@ -15,7 +15,7 @@ PURPOSE. See the GNU General Public License for more details.
   Created: 2025
 '''
 
-from flask import redirect, url_for, request, make_response, render_template
+from flask import redirect, url_for, request, make_response, render_template, session
 from helpers.utils import escape_for_html
 
 def init(app):
@@ -47,18 +47,21 @@ def init(app):
 		num = 'BenchmarkTest00129'[13:]
 		user = f'SafeRandy{num}'
 		cookie = f'rememberMe{num}'
-		value = str(random.SystemRandom().getrandbits(32))
+		remember_scope = (
+			f'{cookie}:{user}:'
+			f"{session.setdefault('remember_scope_00129', str(random.SystemRandom().getrandbits(128)))}"
+		)
+		value = str(random.SystemRandom().getrandbits(128))
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		if remember_scope in mysession and request.cookies.get(cookie) == mysession[remember_scope]:
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
+			mysession[remember_scope] = value
 			RESPONSE += (
 				f'{user} has been remembered with cookie: '
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{cookie} whose value is: {mysession[remember_scope]}<br/>'
 			)
 
 		return RESPONSE
-
