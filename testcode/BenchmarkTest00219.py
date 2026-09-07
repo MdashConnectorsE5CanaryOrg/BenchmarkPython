@@ -15,7 +15,7 @@ PURPOSE. See the GNU General Public License for more details.
   Created: 2025
 '''
 
-from flask import redirect, url_for, request, make_response, render_template
+from flask import redirect, url_for, request, make_response, render_template, session
 from helpers.utils import escape_for_html
 
 def init(app):
@@ -39,23 +39,21 @@ def init(app):
 		bar = thing.doSomething(param)
 
 		import random
-		from helpers.utils import mysession
 
 		num = 'BenchmarkTest00219'[13:]
 		user = f'Nancy{num}'
 		cookie = f'rememberMe{num}'
 		value = str(random.normalvariate())[2:]
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		if cookie in session and request.cookies.get(cookie) == session[cookie]:
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
+			session[cookie] = value
 			RESPONSE += (
 				f'{user} has been remembered with cookie: '
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{cookie} whose value is: {session[cookie]}<br/>'
 			)
 
 		return RESPONSE
-
