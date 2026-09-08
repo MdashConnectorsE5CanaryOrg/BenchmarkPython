@@ -17,6 +17,7 @@ PURPOSE. See the GNU General Public License for more details.
 
 from flask import redirect, url_for, request, make_response, render_template
 from helpers.utils import escape_for_html
+import os
 
 def init(app):
 
@@ -36,12 +37,20 @@ def init(app):
 
 		import helpers.utils
 
+		base_dir = os.path.abspath(helpers.utils.TESTFILES_DIR)
+		fileName = os.path.abspath(os.path.join(base_dir, bar))
+
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
-			with open(fileName, 'wb') as fd:
+			if os.path.commonpath([base_dir, fileName]) != base_dir:
 				RESPONSE += (
-					f'Now ready to write to file: {escape_for_html(fileName)}'
+					f'Problem reading from file \'{escape_for_html(fileName)}\': '
+					f'{escape_for_html("Invalid path")}'
 				)
+			else:
+				with open(fileName, 'wb') as fd:
+					RESPONSE += (
+						f'Now ready to write to file: {escape_for_html(fileName)}'
+					)
 		except IOError as e:
 			RESPONSE += (
 				f'Problem reading from file \'{escape_for_html(fileName)}\': '
@@ -49,4 +58,3 @@ def init(app):
 			)
 
 		return RESPONSE
-
