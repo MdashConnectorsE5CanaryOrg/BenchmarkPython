@@ -15,7 +15,7 @@ PURPOSE. See the GNU General Public License for more details.
   Created: 2025
 '''
 
-from flask import redirect, url_for, request, make_response, render_template
+from flask import redirect, url_for, request, make_response, render_template, session
 from helpers.utils import escape_for_html
 
 def init(app):
@@ -45,24 +45,16 @@ def init(app):
 		else:
 			bar = param
 
-		import secrets
-		from helpers.utils import mysession
-
 		num = 'BenchmarkTest00033'[13:]
 		user = f'SafeRobbie{num}'
-		cookie = f'rememberMe{num}'
-		value = str(secrets.randbelow(2**32))
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		if session.get('user') == user:
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
 			RESPONSE += (
-				f'{user} has been remembered with cookie:'
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				'No authenticated remember-me session is available<br/>'
 			)
 
 		return RESPONSE
-
