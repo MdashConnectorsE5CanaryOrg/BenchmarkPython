@@ -47,12 +47,8 @@ def init(app):
 		conf90091.set('section90091', 'keyB-90091', param)
 		bar = conf90091.get('section90091', 'keyB-90091')
 
-		try:
-			exec(bar)
-		except:
-			RESPONSE += (
-				f'Error executing statement \'{escape_for_html(bar)}\''
-			)
+		RESPONSE += (
+			f"Dynamic execution disabled for input '{escape_for_html(bar)}'"
+		)
 
 		return RESPONSE
-
