@@ -39,9 +39,15 @@ def init(app):
 		bar = thing.doSomething(param)
 
 		import helpers.utils
+		import os
 
+		fileName = None
+		fd = None
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
+			safe_name = os.path.basename(bar)
+			if safe_name != bar or safe_name in ('', '.', '..'):
+				raise IOError(0, 'invalid path component')
+			fileName = f'{helpers.utils.TESTFILES_DIR}/{safe_name}'
 			fd = open(fileName, 'wb')
 			RESPONSE += (
 				f'Now ready to write to file: {escape_for_html(fileName)}'
@@ -59,4 +65,3 @@ def init(app):
 				pass # "// we tried..."
 
 		return RESPONSE
-
