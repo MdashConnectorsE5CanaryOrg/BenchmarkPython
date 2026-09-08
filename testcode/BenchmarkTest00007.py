@@ -16,6 +16,7 @@ PURPOSE. See the GNU General Public License for more details.
 '''
 
 from flask import redirect, url_for, request, make_response, render_template
+from pathlib import Path
 from helpers.utils import escape_for_html
 
 def init(app):
@@ -44,15 +45,21 @@ def init(app):
 		bar = string22532[4:-17]
 
 		import helpers.utils
+		base_dir = Path(helpers.utils.TESTFILES_DIR).resolve()
+		fd = None
+		fileName = str(base_dir / bar)
 
-		if '../' in bar:
+		try:
+			candidate = (base_dir / bar).resolve()
+			candidate.relative_to(base_dir)
+		except ValueError:
 			RESPONSE += (
-				'File name must not contain \'../\''
+				'File name must stay within the test files directory'
 			)
 			return RESPONSE
 
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
+			fileName = str(candidate)
 			fd = open(fileName, 'wb')
 			RESPONSE += (
 				f'Now ready to write to file: {escape_for_html(fileName)}'
@@ -70,4 +77,3 @@ def init(app):
 				pass # "// we tried..."
 
 		return RESPONSE
-
