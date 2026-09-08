@@ -44,17 +44,19 @@ def init(app):
 		user = f'SafeTruman{num}'
 		cookie = f'rememberMe{num}'
 		value = secrets.token_urlsafe(32)
+		presented = request.cookies.get(cookie)
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		if presented and presented in mysession and mysession[presented] == user:
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
 		else:
-			mysession[cookie] = value
+			mysession[value] = user
 			RESPONSE += (
-				f'{user} has been remembered with cookie:'
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{user} has been remembered.<br/>'
 			)
+			response = make_response(RESPONSE)
+			response.set_cookie(cookie, value, httponly=True, samesite='Lax')
+			return response
 
 		return RESPONSE
-
