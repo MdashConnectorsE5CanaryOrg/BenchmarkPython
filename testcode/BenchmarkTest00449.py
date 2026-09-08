@@ -16,6 +16,8 @@ PURPOSE. See the GNU General Public License for more details.
 '''
 
 from flask import redirect, url_for, request, make_response, render_template
+import os
+
 from helpers.utils import escape_for_html
 
 def init(app):
@@ -35,18 +37,22 @@ def init(app):
 		bar = param
 
 		import helpers.utils
+		file_root = os.path.realpath(helpers.utils.TESTFILES_DIR)
+		safe_name = os.path.basename(bar)
 
-		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
-			with open(fileName, 'wb') as fd:
+		if safe_name in ('', '.', '..') or safe_name != bar:
+			RESPONSE += "Problem reading from file 'invalid filename': invalid filename"
+		else:
+			fileName = os.path.join(file_root, safe_name)
+			try:
+				with open(fileName, 'wb') as fd:
+					RESPONSE += (
+						f'Now ready to write to file: {escape_for_html(fileName)}'
+					)
+			except OSError as e:
 				RESPONSE += (
-					f'Now ready to write to file: {escape_for_html(fileName)}'
+					f'Problem reading from file \'{escape_for_html(fileName)}\': '
+					f'{escape_for_html(e.strerror or str(e))}'
 				)
-		except IOError as e:
-			RESPONSE += (
-				f'Problem reading from file \'{escape_for_html(fileName)}\': '
-				f'{escape_for_html(e.strerror)}'
-			)
 
 		return RESPONSE
-
