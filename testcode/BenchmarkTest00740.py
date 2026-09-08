@@ -38,18 +38,25 @@ def init(app):
 		bar = base64.b64decode(tmp).decode('utf-8')
 
 		import helpers.utils
+		import os
 
 		fileName = None
 		fd = None
-
-		if '../' in bar:
-			RESPONSE += (
-				'File name must not include \'../\''
-			)
-			return RESPONSE
+		base_dir = os.path.realpath(helpers.utils.TESTFILES_DIR)
 
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
+			fileName = os.path.realpath(os.path.join(base_dir, bar))
+			try:
+				inside_base = os.path.commonpath([base_dir, fileName]) == base_dir
+			except ValueError:
+				inside_base = False
+
+			if not inside_base:
+				RESPONSE += (
+					'File name must stay within the test files directory'
+				)
+				return RESPONSE
+
 			fd = open(fileName, 'rb')
 			RESPONSE += (
 				f'The beginning of file: \'{escape_for_html(fileName)}\' is:\n\n'
@@ -68,4 +75,3 @@ def init(app):
 				pass # "// we tried..."
 
 		return RESPONSE
-
