@@ -37,24 +37,31 @@ def init(app):
 		
 		bar = html.escape(param)
 
-		import secrets
-		from helpers.utils import mysession
+		from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 		num = 'BenchmarkTest00228'[13:]
 		user = f'SafeRobbie{num}'
 		cookie = f'rememberMe{num}'
-		value = str(secrets.randbelow(2**32))
+		serializer = URLSafeTimedSerializer(app.secret_key, salt=cookie)
+		max_age = 60 * 60 * 24 * 30
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
-			RESPONSE += (
-				f'Welcome back: {user}<br/>'
-			)
-		else:
-			mysession[cookie] = value
-			RESPONSE += (
-				f'{user} has been remembered with cookie:'
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
-			)
+		token = request.cookies.get(cookie)
+		if token:
+			try:
+				remembered_user = serializer.loads(token, max_age=max_age)
+			except (BadSignature, SignatureExpired):
+				remembered_user = None
+			if remembered_user == user:
+				RESPONSE += (
+					f'Welcome back: {user}<br/>'
+				)
+				return RESPONSE
 
-		return RESPONSE
-
+		signed_token = serializer.dumps(user)
+		response = make_response()
+		response.set_cookie(cookie, signed_token, max_age=max_age, httponly=True, samesite='Lax')
+		RESPONSE += (
+			f'{user} has been remembered by the server.<br/>'
+		)
+		response.set_data(RESPONSE)
+		return response
