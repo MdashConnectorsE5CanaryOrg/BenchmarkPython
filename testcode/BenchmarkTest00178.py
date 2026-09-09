@@ -39,9 +39,14 @@ def init(app):
 		bar = string84331[4:-17]
 
 		import helpers.utils
+		import os
 
+		fd = None
+		base_dir = os.path.abspath(helpers.utils.TESTFILES_DIR)
+		fileName = os.path.abspath(os.path.join(base_dir, bar))
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
+			if os.path.commonpath([base_dir, fileName]) != base_dir:
+				raise IOError(13, 'Path escapes testfiles directory', fileName)
 			fd = open(fileName, 'wb')
 			RESPONSE += (
 				f'Now ready to write to file: {escape_for_html(fileName)}'
@@ -59,4 +64,3 @@ def init(app):
 				pass # "// we tried..."
 
 		return RESPONSE
-
