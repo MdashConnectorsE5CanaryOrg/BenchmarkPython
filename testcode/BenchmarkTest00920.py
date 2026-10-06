@@ -54,8 +54,15 @@ def init(app):
 		import helpers.utils
 
 		try:
-			testfiles = pathlib.Path(helpers.utils.TESTFILES_DIR)
-			p = testfiles / bar
+			testfiles = pathlib.Path(helpers.utils.TESTFILES_DIR).resolve()
+			p = (testfiles / bar).resolve()
+
+			if not str(p).startswith(str(testfiles)):
+				RESPONSE += (
+					"Invalid Path."
+				)
+				return RESPONSE
+
 			RESPONSE += (
 				f'The beginning of file: \'{escape_for_html(str(p))}\' is:\n\n'
 				f'{escape_for_html(p.read_text()[:1000])}'
@@ -67,4 +74,3 @@ def init(app):
 			)
 
 		return RESPONSE
-
