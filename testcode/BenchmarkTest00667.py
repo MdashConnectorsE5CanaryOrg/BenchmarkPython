@@ -41,10 +41,16 @@ def init(app):
 		conf88272.set('section88272', 'keyB-88272', param)
 		bar = conf88272.get('section88272', 'keyB-88272')
 
+		import errno
 		import helpers.utils
+		import os
 
+		fileName = ''
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
+			base_dir = os.path.abspath(helpers.utils.TESTFILES_DIR)
+			fileName = os.path.abspath(os.path.join(base_dir, bar))
+			if os.path.commonpath([base_dir, fileName]) != base_dir:
+				raise OSError(errno.EINVAL, 'Invalid filename')
 			with open(fileName, 'wb') as fd:
 				RESPONSE += (
 					f'Now ready to write to file: {escape_for_html(fileName)}'
@@ -56,4 +62,3 @@ def init(app):
 			)
 
 		return RESPONSE
-
