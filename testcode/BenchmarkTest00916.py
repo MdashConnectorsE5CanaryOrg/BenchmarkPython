@@ -46,18 +46,24 @@ def init(app):
 		string53978 += 'snapes on a plane'
 		bar = string53978[4:-17]
 
+		import pathlib
 		import helpers.utils
+		fd = None
+		fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
 
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{bar}'
+			base_dir = pathlib.Path(helpers.utils.TESTFILES_DIR).resolve()
+			candidate = (base_dir / bar).resolve()
+			candidate.relative_to(base_dir)
+			fileName = str(candidate)
 			fd = open(fileName, 'wb')
 			RESPONSE += (
 				f'Now ready to write to file: {escape_for_html(fileName)}'
 			)
-		except IOError as e:
+		except (IOError, ValueError) as e:
 			RESPONSE += (
 				f'Problem reading from file \'{escape_for_html(fileName)}\': '
-				f'{escape_for_html(e.strerror)}'
+				f'{escape_for_html(str(e))}'
 			)
 		finally:
 			try:
@@ -67,4 +73,3 @@ def init(app):
 				pass # "// we tried..."
 
 		return RESPONSE
-
