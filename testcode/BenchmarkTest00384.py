@@ -38,24 +38,27 @@ def init(app):
 		tmp = base64.b64encode(param.encode('utf-8'))
 		bar = base64.b64decode(tmp).decode('utf-8')
 
-		import random
+		import secrets
 		from helpers.utils import mysession
 
 		num = 'BenchmarkTest00384'[13:]
 		user = f'Nancy{num}'
 		cookie = f'rememberMe{num}'
-		value = str(random.normalvariate())[2:]
+		session_key = f'{user}:{cookie}'
+		cookie_value = request.cookies.get(cookie)
 
-		if cookie in mysession and request.cookies.get(cookie) == mysession[cookie]:
+		if session_key in mysession and cookie_value == mysession[session_key]:
 			RESPONSE += (
 				f'Welcome back: {user}<br/>'
 			)
+			response = make_response(RESPONSE)
 		else:
-			mysession[cookie] = value
+			value = secrets.token_urlsafe(32)
+			mysession[session_key] = value
 			RESPONSE += (
-				f'{user} has been remembered with cookie: '
-				f'{cookie} whose value is: {mysession[cookie]}<br/>'
+				f'{user} has been remembered.<br/>'
 			)
+			response = make_response(RESPONSE)
+			response.set_cookie(cookie, value, httponly=True, samesite='Lax')
 
-		return RESPONSE
-
+		return response
