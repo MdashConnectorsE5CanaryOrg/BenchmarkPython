@@ -34,9 +34,15 @@ def init(app):
 
 
 		import helpers.utils
+		import os
+
+		fd = None
+		base_dir = os.path.abspath(helpers.utils.TESTFILES_DIR)
+		fileName = os.path.abspath(os.path.join(base_dir, param))
 
 		try:
-			fileName = f'{helpers.utils.TESTFILES_DIR}/{param}'
+			if os.path.commonpath([base_dir, fileName]) != base_dir:
+				raise IOError('Invalid file path')
 			fd = open(fileName, 'wb')
 			RESPONSE += (
 				f'Now ready to write to file: {escape_for_html(fileName)}'
@@ -44,7 +50,7 @@ def init(app):
 		except IOError as e:
 			RESPONSE += (
 				f'Problem reading from file \'{escape_for_html(fileName)}\': '
-				f'{escape_for_html(e.strerror)}'
+				f'{escape_for_html(e.strerror or str(e))}'
 			)
 		finally:
 			try:
@@ -54,5 +60,4 @@ def init(app):
 				pass # "// we tried..."
 
 		return RESPONSE
-
 
